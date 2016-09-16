@@ -1,4 +1,5 @@
 require "rake/testtask"
+require 'rake/extensiontask'
 require "bundler/gem_tasks"
 
 task :default => :test
@@ -13,4 +14,8 @@ task :test_isolated do
     ruby "-Ilib:test", "-w", fn
     abort unless $?.success?
   end
+end
+
+Rake::ExtensionTask.new('sprockets_ext') do |ext|
+  ext.lib_dir = "lib/sprockets"
 end

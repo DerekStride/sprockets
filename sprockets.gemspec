@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
 
   s.files = Dir["README.md", "CHANGELOG.md", "LICENSE", "lib/**/*.rb"]
   s.executables = ["sprockets"]
+  s.extensions = %w(ext/sprockets_ext/extconf.rb)
 
   s.add_dependency "rack",            "> 1", "< 3"
   s.add_dependency "concurrent-ruby", "~> 1.0"
@@ -30,6 +31,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency "sassc", "~> 1.7"
   s.add_development_dependency "uglifier", "~> 2.3"
   s.add_development_dependency "yui-compressor", "~> 0.12"
+  s.add_development_dependency 'rake-compiler'
+  s.add_development_dependency 'pry-byebug'
 
   s.required_ruby_version = '>= 2.0.0'
 

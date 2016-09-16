@@ -2,6 +2,7 @@
 require 'digest/md5'
 require 'digest/sha1'
 require 'digest/sha2'
+require 'sprockets/sprockets_ext'
 require 'set'
 
 module Sprockets
@@ -14,7 +15,8 @@ module Sprockets
     #
     # Returns a Digest::Base subclass.
     def digest_class
-      Digest::SHA256
+      @digest_class ||= Digest::SHA256.new
+      @digest_class.reset
     end
 
     # Internal: Maps digest bytesize to the digest class.
@@ -35,50 +37,6 @@ module Sprockets
       DIGEST_SIZES[bytes.bytesize]
     end
 
-    ADD_VALUE_TO_DIGEST = {
-      String     => ->(val, digest) { digest << val },
-      FalseClass => ->(val, digest) { digest << 'FalseClass'.freeze },
-      TrueClass  => ->(val, digest) { digest << 'TrueClass'.freeze  },
-      NilClass   => ->(val, digest) { digest << 'NilClass'.freeze   },
-
-      Symbol => ->(val, digest) {
-        digest << 'Symbol'.freeze
-        digest << val.to_s
-      },
-      Fixnum => ->(val, digest) {
-        digest << 'Fixnum'.freeze
-        digest << val.to_s
-      },
-      Bignum => ->(val, digest) {
-        digest << 'Bignum'.freeze
-        digest << val.to_s
-      },
-      Array => ->(val, digest) {
-        digest << 'Array'.freeze
-        val.each do |element|
-          ADD_VALUE_TO_DIGEST[element.class].call(element, digest)
-        end
-      },
-      Hash => ->(val, digest) {
-        digest << 'Hash'.freeze
-        val.sort.each do |array|
-          ADD_VALUE_TO_DIGEST[Array].call(array, digest)
-        end
-      },
-      Set => ->(val, digest) {
-        digest << 'Set'.freeze
-        ADD_VALUE_TO_DIGEST[Array].call(val, digest)
-      },
-      Encoding => ->(val, digest) {
-        digest << 'Encoding'.freeze
-        digest << val.name
-      },
-    }
-    ADD_VALUE_TO_DIGEST.default_proc = ->(_, val) {
-      raise TypeError, "couldn't digest #{ val }"
-    }
-    private_constant :ADD_VALUE_TO_DIGEST
-
     # Internal: Generate a hexdigest for a nested JSON serializable object.
     #
     # This is used for generating cache keys, so its pretty important its
@@ -88,7 +46,7 @@ module Sprockets
     #
     # Returns a String digest of the object.
     def digest(obj)
-      build_digest(obj).digest
+      Sprockets::DigestBuilder.build_digest(obj).digest
     end
 
     # Internal: Generate a hexdigest for a nested JSON serializable object.
@@ -99,7 +57,7 @@ module Sprockets
     #
     # Returns a String digest of the object.
     def hexdigest(obj)
-      build_digest(obj).hexdigest!
+      Sprockets::DigestBuilder.build_digest(obj).hexdigest!
     end
 
     # Internal: Pack a binary digest to a hex encoded string.
@@ -179,13 +137,5 @@ module Sprockets
     def hexdigest_integrity_uri(hexdigest)
       integrity_uri(unpack_hexdigest(hexdigest))
     end
-
-    private
-      def build_digest(obj)
-        digest = digest_class.new
-
-        ADD_VALUE_TO_DIGEST[obj.class].call(obj, digest)
-        digest
-      end
   end
 end

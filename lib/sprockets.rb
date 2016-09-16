@@ -6,6 +6,7 @@ require 'sprockets/cache'
 require 'sprockets/environment'
 require 'sprockets/errors'
 require 'sprockets/manifest'
+require 'sprockets/sprockets_ext'
 
 module Sprockets
   require 'sprockets/processor_utils'
